@@ -18,13 +18,27 @@ app.get('/computer', async (req, res) => {
     res.send(computer)
     return
   }
-  const resp = await axios.post('https://engine.hyperbeam.com/v0/vm', {
-    start_url: "https://fmhy.net"
-  }, {
-    headers: { 'Authorization': `Bearer ${apiKey}` }
-  })
-  computer = resp.data
-  res.send(computer)
+  try {
+    const resp = await axios.post('https://engine.hyperbeam.com/v0/vm', {
+      start_url: "https://fmhy.net"
+    }, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    })
+    computer = resp.data
+    res.send(computer)
+  } catch (err) {
+    console.error("Hyperbeam API error:", err.response?.status, err.response?.data)
+    res.status(err.response?.status || 500).json({
+      error: "Failed to create session",
+      details: err.response?.data
+    })
+  }
+})
+
+// Call this to clear the cached session if it expires
+app.get('/reset', (req, res) => {
+  computer = null
+  res.send("Session reset")
 })
 
 app.listen(8080, () => {
