@@ -1,46 +1,31 @@
-const path = require('path')
-const express = require('express')
-const axios = require('axios')
-const app = express()
+<div style="font-family: sans-serif">
+  <button id="gotoFMHYBtn">Open fmhy.net</button>
+  <button id="fullscreenBtn">⛶ Fullscreen</button>
+  Volume: <input type="range" min="0" max="100" value="100" id="range">
+  <p>Current website: <span id="currentSite"></p>
+</div>
+<div id="cloudComputerDiv" style="height:720px;width:1280px"></div>
+<script type="module">
+  import Hyperbeam from "https://unpkg.com/@hyperbeam/web@latest/dist/index.js"
+  const resp = await fetch("/computer")
+  const data = await resp.json()
+  const hb = await Hyperbeam(cloudComputerDiv, data.embed_url)
 
-const apiKey = process.env.HB_API_KEY
-if (!apiKey || apiKey === "") {
-    console.error("API Key is not set, did you set the HB_API_KEY environment variable to your API key?")
-}
+  gotoFMHYBtn.addEventListener("click", () => {
+    hb.tabs.update({ url: "https://fmhy.net" })
+  })
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/index.html'))
-})
+  fullscreenBtn.addEventListener("click", () => {
+    if (cloudComputerDiv.requestFullscreen) {
+      cloudComputerDiv.requestFullscreen()
+    }
+  })
 
-let computer
-app.get('/computer', async (req, res) => {
-  if (computer) {
-    res.send(computer)
-    return
-  }
-  try {
-    const resp = await axios.post('https://engine.hyperbeam.com/v0/vm', {
-      start_url: "https://fmhy.net"
-    }, {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    })
-    computer = resp.data
-    res.send(computer)
-  } catch (err) {
-    console.error("Hyperbeam API error:", err.response?.status, err.response?.data)
-    res.status(err.response?.status || 500).json({
-      error: "Failed to create session",
-      details: err.response?.data
-    })
-  }
-})
-
-// Call this to clear the cached session if it expires
-app.get('/reset', (req, res) => {
-  computer = null
-  res.send("Session reset")
-})
-
-app.listen(8080, () => {
-  console.log('Server start at http://localhost:8080')
-})
+  range.addEventListener("change", (e) => {
+    hb.volume = e.target.value / 100
+  })
+  hb.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (changeInfo.title)
+      currentSite.innerText = changeInfo.title
+  })
+</script>
