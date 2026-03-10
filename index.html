@@ -1,5 +1,5 @@
 <div style="font-family: sans-serif">
-  <button id="gotoYouTubeBtn">Open Youtube.com</button>
+  <button id="fullscreenBtn">⛶ Fullscreen</button>
   Volume: <input type="range" min="0" max="100" value="100" id="range">
   <p>Current website: <span id="currentSite"></p>
 </div>
@@ -9,16 +9,16 @@
   const resp = await fetch("/computer")
   const data = await resp.json()
   const hb = await Hyperbeam(cloudComputerDiv, data.embed_url)
-  // Programmatically navigate to websites
-  gotoYouTubeBtn.addEventListener("click", () => {
-    hb.tabs.update({ url: "https://youtube.com" })
+
+  fullscreenBtn.addEventListener("click", () => {
+    if (cloudComputerDiv.requestFullscreen) {
+      cloudComputerDiv.requestFullscreen()
+    }
   })
-  // Control the user's local volume
+
   range.addEventListener("change", (e) => {
     hb.volume = e.target.value / 100
   })
-  // Listen to tab changes
-  // (e.g. get the tab's new title when the user visits a different site)
   hb.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.title)
       currentSite.innerText = changeInfo.title
